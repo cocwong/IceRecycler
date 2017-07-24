@@ -103,6 +103,7 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
     }
 
     private void actionScroll(float dy) {
+        mScroller.abortAnimation();
         state = IceRecyclerState.STATE_DRAGGING;
         int y = (int) -dy;
         Log.e("y", y + "");
