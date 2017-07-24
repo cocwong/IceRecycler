@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
+import android.widget.Scroller;
 
 /**
  * Created by wanglixin on 2017/7/21.
@@ -17,7 +18,7 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
     private RecyclerView recyclerView;
     private int state;
     private int slapHeight = 80;
-
+    private Scroller mScroller;
     public IceRecyclerView(Context context) {
         this(context, null);
     }
@@ -32,6 +33,7 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
     }
 
     private void init() {
+        mScroller = new Scroller(getContext());
         recyclerView = new RecyclerView(getContext());
         recyclerView.setBackgroundColor(Color.parseColor("#FFD4D7B0"));
         LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
@@ -108,7 +110,18 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
     }
 
     private void reverseScroll() {
-        scrollTo(0,0);//用scroller滑动
+//        scrollTo(0,0);//use Scroller to replace this method.
+        mScroller.startScroll(0,getScrollY(),0,-getScrollY(),500);
+        invalidate();
+    }
+
+    @Override
+    public void computeScroll() {
+//        super.computeScroll();
+        if(mScroller.computeScrollOffset()){
+            scrollTo(0,mScroller.getCurrY());
+            postInvalidate();
+        }
     }
 
     @Override
