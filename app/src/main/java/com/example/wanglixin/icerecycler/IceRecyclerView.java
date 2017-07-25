@@ -7,11 +7,13 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.Scroller;
 
 /**
- * Created by wanglixin on 2017/7/21.
+ * Created by cocwong on 2017/7/21.
  */
 
 public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapter {
@@ -19,6 +21,7 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
     private int state;
     private int slapHeight = 80;
     private Scroller mScroller;
+
     public IceRecyclerView(Context context) {
         this(context, null);
     }
@@ -38,7 +41,34 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
         recyclerView.setBackgroundColor(Color.parseColor("#FFD4D7B0"));
         LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         recyclerView.setLayoutParams(params);
+        recyclerView.setId(R.id.id_recycler);
         addView(recyclerView);
+        setDefaultRefreshView();
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        setMeasuredDimension(widthMeasureSpec, heightMeasureSpec + MeasureSpec.makeMeasureSpec(100, MeasureSpec.EXACTLY));
+    }
+
+    /**
+     * the default refresh_view
+     */
+    private void setDefaultRefreshView() {
+        View view = new View(getContext());
+        view.setBackgroundColor(Color.YELLOW);
+        LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT, 100);
+        params.addRule(RelativeLayout.ABOVE, R.id.id_recycler);
+        addView(view, params);
+    }
+
+    /**
+     * replace the refresh_view with custom view
+     *
+     * @param view the custom view
+     */
+    public void setRefreshView(View view) {
     }
 
     float lastY = 0;
@@ -111,16 +141,15 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
     }
 
     private void reverseScroll() {
-//        scrollTo(0,0);//use Scroller to replace this method.
-        mScroller.startScroll(0,getScrollY(),0,-getScrollY(),500);
+        mScroller.startScroll(0, getScrollY(), 0, -getScrollY(), 500);
         invalidate();
     }
 
     @Override
     public void computeScroll() {
 //        super.computeScroll();
-        if(mScroller.computeScrollOffset()){
-            scrollTo(0,mScroller.getCurrY());
+        if (mScroller.computeScrollOffset()) {
+            scrollTo(0, mScroller.getCurrY());
             postInvalidate();
         }
     }
