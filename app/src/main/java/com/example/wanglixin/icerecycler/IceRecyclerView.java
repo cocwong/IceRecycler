@@ -19,6 +19,8 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
     private int state;
     private int slapHeight = 80;
     private Scroller mScroller;
+    private View headView;
+
     public IceRecyclerView(Context context) {
         this(context, null);
     }
@@ -35,10 +37,26 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
     private void init() {
         mScroller = new Scroller(getContext());
         recyclerView = new RecyclerView(getContext());
+        recyclerView.setId(R.id.id_recycler);
         recyclerView.setBackgroundColor(Color.parseColor("#FFD4D7B0"));
         LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         recyclerView.setLayoutParams(params);
         addView(recyclerView);
+        addDefaultHead();
+    }
+
+    private void addDefaultHead() {
+        headView = new View(getContext());
+        headView.setBackgroundColor(Color.YELLOW);
+        LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT, 100);
+        params.addRule(ABOVE, R.id.id_recycler);
+        headView.setLayoutParams(params);
+        addView(headView);
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
     float lastY = 0;
@@ -54,6 +72,7 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
                 if (childCount == 0) {
                     float dy = ev.getY() - lastY;
                     if (dy <= 0) {
+                        lastY = ev.getY();
                         break;
                     }
                     actionScroll(dy);
@@ -63,6 +82,7 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
                     if (canScroll()) {
                         float dy = ev.getY() - lastY;
                         if (getScrollY() == 0 && dy <= 0) {
+                            lastY = ev.getY();
                             break;
                         }
                         if (getScrollY() < 0 && dy < 0 && getScrollY() + Math.abs(dy) > 0) {
@@ -73,6 +93,7 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
                         return true;
                     }
                 }
+                lastY = ev.getY();
                 break;
             case MotionEvent.ACTION_UP:
                 if (getScrollY() < 0) {
@@ -108,20 +129,26 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
         int y = (int) -dy;
         Log.e("y", y + "");
         scrollBy(0, y);
+        LayoutParams params = (LayoutParams) getHeaderView().getLayoutParams();
+        params.topMargin -= y;
+        getHeaderView().setLayoutParams(params);
     }
 
     private void reverseScroll() {
-//        scrollTo(0,0);//use Scroller to replace this method.
-        mScroller.startScroll(0,getScrollY(),0,-getScrollY(),500);
+        mScroller.startScroll(0, getScrollY(), 0, -getScrollY(), 500);
         invalidate();
     }
 
     @Override
     public void computeScroll() {
-//        super.computeScroll();
-        if(mScroller.computeScrollOffset()){
-            scrollTo(0,mScroller.getCurrY());
+        if (mScroller.computeScrollOffset()) {
+            scrollTo(0, mScroller.getCurrY());
             postInvalidate();
+            if (mScroller.isFinished()) {
+                LayoutParams params = (LayoutParams) getHeaderView().getLayoutParams();
+                params.topMargin = 0;
+                getHeaderView().setLayoutParams(params);
+            }
         }
     }
 
@@ -165,5 +192,9 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
 
     private boolean isFirstViewTopZero() {
         return recyclerView.getLayoutManager().findViewByPosition(0).getTop() == 0;
+    }
+
+    public View getHeaderView() {
+        return headView;
     }
 }
