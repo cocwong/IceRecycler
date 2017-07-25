@@ -7,13 +7,11 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.Scroller;
 
 /**
- * Created by cocwong on 2017/7/21.
+ * Created by wanglixin on 2017/7/21.
  */
 
 public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapter {
@@ -21,6 +19,7 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
     private int state;
     private int slapHeight = 80;
     private Scroller mScroller;
+    private View headView;
 
     public IceRecyclerView(Context context) {
         this(context, null);
@@ -38,37 +37,26 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
     private void init() {
         mScroller = new Scroller(getContext());
         recyclerView = new RecyclerView(getContext());
+        recyclerView.setId(R.id.id_recycler);
         recyclerView.setBackgroundColor(Color.parseColor("#FFD4D7B0"));
         LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         recyclerView.setLayoutParams(params);
-        recyclerView.setId(R.id.id_recycler);
         addView(recyclerView);
-        setDefaultRefreshView();
+        addDefaultHead();
+    }
+
+    private void addDefaultHead() {
+        headView = new View(getContext());
+        headView.setBackgroundColor(Color.YELLOW);
+        LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT, 100);
+        params.addRule(ABOVE, R.id.id_recycler);
+        headView.setLayoutParams(params);
+        addView(headView);
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        setMeasuredDimension(widthMeasureSpec, heightMeasureSpec + MeasureSpec.makeMeasureSpec(100, MeasureSpec.EXACTLY));
-    }
-
-    /**
-     * the default refresh_view
-     */
-    private void setDefaultRefreshView() {
-        View view = new View(getContext());
-        view.setBackgroundColor(Color.YELLOW);
-        LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT, 100);
-        params.addRule(RelativeLayout.ABOVE, R.id.id_recycler);
-        addView(view, params);
-    }
-
-    /**
-     * replace the refresh_view with custom view
-     *
-     * @param view the custom view
-     */
-    public void setRefreshView(View view) {
     }
 
     float lastY = 0;
@@ -84,6 +72,7 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
                 if (childCount == 0) {
                     float dy = ev.getY() - lastY;
                     if (dy <= 0) {
+                        lastY = ev.getY();
                         break;
                     }
                     actionScroll(dy);
@@ -93,6 +82,7 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
                     if (canScroll()) {
                         float dy = ev.getY() - lastY;
                         if (getScrollY() == 0 && dy <= 0) {
+                            lastY = ev.getY();
                             break;
                         }
                         if (getScrollY() < 0 && dy < 0 && getScrollY() + Math.abs(dy) > 0) {
@@ -103,6 +93,7 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
                         return true;
                     }
                 }
+                lastY = ev.getY();
                 break;
             case MotionEvent.ACTION_UP:
                 if (getScrollY() < 0) {
@@ -138,6 +129,9 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
         int y = (int) -dy;
         Log.e("y", y + "");
         scrollBy(0, y);
+        LayoutParams params = (LayoutParams) getHeaderView().getLayoutParams();
+        params.topMargin -= y;
+        getHeaderView().setLayoutParams(params);
     }
 
     private void reverseScroll() {
@@ -147,10 +141,14 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
 
     @Override
     public void computeScroll() {
-//        super.computeScroll();
         if (mScroller.computeScrollOffset()) {
             scrollTo(0, mScroller.getCurrY());
             postInvalidate();
+            if (mScroller.isFinished()) {
+                LayoutParams params = (LayoutParams) getHeaderView().getLayoutParams();
+                params.topMargin = 0;
+                getHeaderView().setLayoutParams(params);
+            }
         }
     }
 
@@ -194,5 +192,9 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
 
     private boolean isFirstViewTopZero() {
         return recyclerView.getLayoutManager().findViewByPosition(0).getTop() == 0;
+    }
+
+    public View getHeaderView() {
+        return headView;
     }
 }
