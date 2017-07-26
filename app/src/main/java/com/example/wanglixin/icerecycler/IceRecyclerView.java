@@ -7,7 +7,6 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.RelativeLayout;
 import android.widget.Scroller;
 
@@ -21,6 +20,7 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
     private int slapHeight = 80;
     private Scroller mScroller;
     private View headView;
+    private OnRefreshListener refreshListener;
 
     public IceRecyclerView(Context context) {
         this(context, null);
@@ -135,8 +135,18 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
         getHeaderView().setLayoutParams(params);
     }
 
+    /**
+     * when released,scroll the view to its position.
+     *
+     * @see #scrollToHead()
+     * @see #scrollToTop()
+     */
     private void reverseScroll() {
-        mScroller.startScroll(0, getScrollY(), 0, -getScrollY(), 300);
+        if (refreshListener == null) {
+            scrollToTop();
+        } else {
+            scrollToHead();
+        }
         invalidate();
     }
 
@@ -144,17 +154,34 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
     public void computeScroll() {
         if (mScroller.computeScrollOffset()) {
             scrollTo(0, mScroller.getCurrY());
-            postInvalidate();
-            if (mScroller.isFinished()) {
+            if (mScroller.isFinished() && getScrollY() == 0) {
                 LayoutParams params = (LayoutParams) getHeaderView().getLayoutParams();
                 params.topMargin = 0;
                 getHeaderView().setLayoutParams(params);
             }
+            postInvalidate();
         }
     }
 
+    /**
+     * scroll the recyclerView to top,
+     * when completed,the head is invisible.
+     */
+    private void scrollToTop() {
+        mScroller.startScroll(0, getScrollY(), 0, -getScrollY(), 300);
+    }
+
+    /**
+     * scroll the whole view to top,
+     * when completed,the head is visible.
+     */
+    private void scrollToHead() {
+        mScroller.startScroll(0, getScrollY(), 0, -getScrollY() - 100, 300);
+        refreshListener.onRefresh();
+    }
+
     @Override
-    public void setAdapter(RecyclerView.Adapter<RecyclerView.ViewHolder> adapter) {
+    public void setAdapter(RecyclerView.Adapter adapter) {
         recyclerView.setAdapter(adapter);
     }
 
@@ -197,5 +224,22 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
 
     public View getHeaderView() {
         return headView;
+    }
+
+    public void setOnRefreshListener(OnRefreshListener listener) {
+        refreshListener = listener;
+    }
+
+    /**
+     * call this method when your refresh is completed,
+     * so that you can close the refresh view.
+     */
+    public void setRefreshComplete() {
+        if (refreshListener == null) {
+            throw new UnsupportedOperationException("you must set a listener before this operation!");
+        }
+        Log.e("ssss","complete");
+        scrollToTop();
+        postInvalidate();
     }
 }
