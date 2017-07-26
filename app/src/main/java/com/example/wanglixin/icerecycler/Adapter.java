@@ -17,7 +17,7 @@ public class Adapter extends RecyclerView.Adapter {
     private List<String> list = new ArrayList<>();
 
     public Adapter() {
-        for (int i = 1; i < 50; i++) {
+        for (int i = 1; i < 30; i++) {
             list.add(i + "");
         }
     }

@@ -7,6 +7,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.RelativeLayout;
 import android.widget.Scroller;
 
@@ -135,7 +136,7 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
     }
 
     private void reverseScroll() {
-        mScroller.startScroll(0, getScrollY(), 0, -getScrollY(), 500);
+        mScroller.startScroll(0, getScrollY(), 0, -getScrollY(), 300);
         invalidate();
     }
 
