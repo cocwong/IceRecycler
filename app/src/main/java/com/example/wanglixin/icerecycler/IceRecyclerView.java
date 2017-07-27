@@ -106,27 +106,8 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
         return super.dispatchTouchEvent(ev);
     }
 
-    @Override
-    public boolean onInterceptTouchEvent(MotionEvent ev) {
-        return super.onInterceptTouchEvent(ev);
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                break;
-            case MotionEvent.ACTION_MOVE:
-                break;
-            case MotionEvent.ACTION_UP:
-                break;
-        }
-        return super.onTouchEvent(event);
-    }
-
     private void actionScroll(float dy) {
         mScroller.abortAnimation();
-        state = IceRecyclerState.STATE_DRAGGING;
         int y = (int) -dy;
         Log.e("y", y + "");
         scrollBy(0, y);
@@ -138,14 +119,19 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
     /**
      * when released,scroll the view to its position.
      *
-     * @see #scrollToHead()
+     * @see #scrollToHead(boolean isRefresh)
      * @see #scrollToTop()
      */
     private void reverseScroll() {
-        if (refreshListener == null) {
+        if (state == IceRecyclerState.STATE_REFRESHING) {
+            scrollToHead(false);
+            invalidate();
+            return;
+        }
+        if (refreshListener == null || Math.abs(getScrollY()) < 200) {
             scrollToTop();
         } else {
-            scrollToHead();
+            scrollToHead(true);
         }
         invalidate();
     }
@@ -168,6 +154,7 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
      * when completed,the head is invisible.
      */
     private void scrollToTop() {
+        state = IceRecyclerState.STATE_NORMAL;
         mScroller.startScroll(0, getScrollY(), 0, -getScrollY(), 300);
     }
 
@@ -175,9 +162,12 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
      * scroll the whole view to top,
      * when completed,the head is visible.
      */
-    private void scrollToHead() {
+    private void scrollToHead(boolean isRefresh) {
+        if (isRefresh) {
+            state = IceRecyclerState.STATE_REFRESHING;
+            refreshListener.onRefresh();
+        }
         mScroller.startScroll(0, getScrollY(), 0, -getScrollY() - 100, 300);
-        refreshListener.onRefresh();
     }
 
     @Override
@@ -231,14 +221,13 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
     }
 
     /**
-     * call this method when your refresh is completed,
+     * call this method when your refresh action is completed,
      * so that you can close the refresh view.
      */
     public void setRefreshComplete() {
         if (refreshListener == null) {
             throw new UnsupportedOperationException("you must set a listener before this operation!");
         }
-        Log.e("ssss","complete");
         scrollToTop();
         postInvalidate();
     }

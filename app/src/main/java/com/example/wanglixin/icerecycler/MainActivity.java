@@ -16,16 +16,16 @@ public class MainActivity extends AppCompatActivity {
         recycler.setLayoutManager(new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false));
         Adapter adapter = new Adapter();
         recycler.setAdapter(adapter);
-//        recycler.setOnRefreshListener(new OnRefreshListener() {
-//            @Override
-//            public void onRefresh() {
-//                new Handler().postDelayed(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        recycler.setRefreshComplete();
-//                    }
-//                },5000);
-//            }
-//        });
+        recycler.setOnRefreshListener(new OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        recycler.setRefreshComplete();
+                    }
+                },5000);
+            }
+        });
     }
 }
