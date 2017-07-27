@@ -16,6 +16,7 @@ public class MainActivity extends AppCompatActivity {
         recycler.setLayoutManager(new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false));
         Adapter adapter = new Adapter();
         recycler.setAdapter(adapter);
+        recycler.setRefreshEnable(true);
         recycler.setOnRefreshListener(new OnRefreshListener() {
             @Override
             public void onRefresh() {

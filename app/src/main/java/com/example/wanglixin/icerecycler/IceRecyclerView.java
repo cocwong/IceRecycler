@@ -17,7 +17,8 @@ import android.widget.Scroller;
 public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapter {
     private RecyclerView recyclerView;
     private int state;
-    private int slapHeight = 80;
+    private int slapHeight = 200;
+    private int refreshViewHeight = 100;
     private Scroller mScroller;
     private View headView;
     private OnRefreshListener refreshListener;
@@ -49,7 +50,7 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
     private void addDefaultHead() {
         headView = new View(getContext());
         headView.setBackgroundColor(Color.YELLOW);
-        LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT, 100);
+        LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT, refreshViewHeight);
         params.addRule(ABOVE, R.id.id_recycler);
         headView.setLayoutParams(params);
         addView(headView);
@@ -64,6 +65,7 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
+        if(!refreshEnable)return super.dispatchTouchEvent(ev);
         switch (ev.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 lastY = ev.getY();
@@ -123,12 +125,15 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
      * @see #scrollToTop()
      */
     private void reverseScroll() {
+        if(state == IceRecyclerState.STATE_REFRESHING && Math.abs(getScrollY()) < refreshViewHeight){
+            return;
+        }
         if (state == IceRecyclerState.STATE_REFRESHING) {
             scrollToHead(false);
             invalidate();
             return;
         }
-        if (refreshListener == null || Math.abs(getScrollY()) < 200) {
+        if (refreshListener == null || Math.abs(getScrollY()) < slapHeight) {
             scrollToTop();
         } else {
             scrollToHead(true);
@@ -167,7 +172,7 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
             state = IceRecyclerState.STATE_REFRESHING;
             refreshListener.onRefresh();
         }
-        mScroller.startScroll(0, getScrollY(), 0, -getScrollY() - 100, 300);
+        mScroller.startScroll(0, getScrollY(), 0, -getScrollY() - refreshViewHeight, 300);
     }
 
     @Override
@@ -230,5 +235,14 @@ public class IceRecyclerView extends RelativeLayout implements IceRecyclerAdapte
         }
         scrollToTop();
         postInvalidate();
+    }
+
+    private boolean refreshEnable;
+
+    /**
+     * @param enable <b>true</b> enable refresh.
+     */
+    public void setRefreshEnable(boolean enable) {
+        refreshEnable = enable;
     }
 }
